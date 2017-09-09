@@ -76,51 +76,53 @@ object FizzleFade {
   /*
    * http://fabiensanglard.net/fizzlefade/index.php
    * https://en.wikipedia.org/wiki/Linear-feedback_shift_register
+   *
+   * Designed for 320x200
    */
-  def randomPointsByLinearFeedbackShiftRegister(width: Int, height: Int): Stream[Point] = Stream
-    .iterate(1)(i => if ((i & 1) == 0) i >>> 1 else (i >>> 1) ^ 0x00012000)
-    .drop(1)
-    .takeWhile(_ != 1)
-    .map(i => new Point((i & 0x1FF00) >>> 8, i & 0xFF))
-    .filter(p => p.x < width && p.y < height)
+  def randomPointsByLinearFeedbackShiftRegister(width: Int, height: Int): Stream[Point] = {
+    Stream
+      .iterate(1)(i => if ((i & 1) == 0) i >>> 1 else (i >>> 1) ^ 0x00012000)
+      .drop(1)
+      .takeWhile(_ != 1)
+      .map(i => new Point((i & 0x1FF00) >>> 8, i & 0xFF))
+      .filter(p => p.x < width && p.y < height)
+  }
 
   /*
    * http://antirez.com/news/113
    * https://en.wikipedia.org/wiki/Feistel_cipher
+   *
+   * Designed for 320x200
    */
-  def randomPointsByFeistelNetwork(width: Int, height: Int): Stream[Point] = Stream
-    .range(0, 65536)
-    .map(i => {
-      var l = i & 0xFF
-      var r = i >>> 8
-      for (_ <- 0 until 8) {
-        val nl = r
-        val F = (((r * 11) + (r >> 5) + 7 * 127) ^ r) & 0xFF
-        r = l ^ F
-        l = nl
-      }
-      ((r << 8) | l) & 0xFFFF
-    })
-    .map(i => new Point(i % width, i / width))
-    .filter(p => p.x < width && p.y < height)
+  def randomPointsByFeistelNetwork(width: Int, height: Int): Stream[Point] = {
+    Stream
+      .range(0, 65536)
+      .map(i => {
+        val (ln, rn) = Stream.iterate((i & 0xFF, i >>> 8), 8) { case (l, r) =>
+          (r, l ^ ((((r * 11) + (r >> 5) + 7 * 127) ^ r) & 0xFF))
+        }.last
+        ((rn << 8) | ln) & 0xFFFF
+      })
+      .map(i => new Point(i % width, i / width))
+      .filter(p => p.x < width && p.y < height)
+  }
 
   /*
    * https://news.ycombinator.com/item?id=15125836
+   *
+   * Designed for any resolution
    */
-  def randomPointsByGeneralizedFeistelNetwork(width: Int, height: Int): Stream[Point] = Stream
-    .range(0, width * height)
-    .map(i => {
-      var value = i
-      for (j <- 0 until 8) {
-        var l = value / width
-        var r = value % width
-        val nl = r
-        val F = (r * 356357 + j * 1234567) % height
-        r = (l + F) % height
-        l = nl
-        value = height * l + r
-      }
-      value
-    })
-    .map(i => new Point(i % width, i / width))
+  def randomPointsByGeneralizedFeistelNetwork(width: Int, height: Int): Stream[Point] = {
+    Stream
+      .range(0, width * height)
+      .map(i => {
+        Stream.iterate(i, 8) { i =>
+          val l = i / width
+          val r = i % width
+          val F = (r * 356357) % height
+          height * r + (l + F) % height
+        }.last
+      })
+      .map(i => new Point(i % width, i / width))
+  }
 }
