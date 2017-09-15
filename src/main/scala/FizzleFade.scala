@@ -1,10 +1,12 @@
 import java.awt.Color.RED
-import java.awt.{Graphics, Point}
+import java.awt.Graphics
 import java.lang.Thread.sleep
 import java.util
 import javax.swing.SwingUtilities.invokeAndWait
 import javax.swing.WindowConstants.DISPOSE_ON_CLOSE
 import javax.swing.{JFrame, SwingWorker}
+
+import FizzleFade.Point
 
 final class FizzleFade(title: String, width: Int, height: Int, points: (Int, Int) => Stream[Point])
   extends SwingWorker[Unit, Point] {
@@ -38,16 +40,16 @@ final class FizzleFade(title: String, width: Int, height: Int, points: (Int, Int
   private def publishRandomUpdates(): Unit = {
     points(width, height).grouped(50).foreach(group => {
       sleep(1)
-      group.foreach(p => {
-        assert(p.x < width && p.y < height, p.toString)
-        publish(p)
-      })
+      group.foreach { case point@(x, y) =>
+        assert(x < width && y < height, point)
+        publish(point)
+      }
     })
   }
 
   override def process(points: util.List[Point]): Unit = {
     super.process(points)
-    points.forEach(p => graphics.get.drawRect(p.x, p.y, 1, 1))
+    points.forEach { case (x, y) => graphics.get.drawRect(x, y, 1, 1) }
   }
 
   override def done(): Unit = {
@@ -58,6 +60,8 @@ final class FizzleFade(title: String, width: Int, height: Int, points: (Int, Int
 }
 
 object FizzleFade {
+
+  type Point = (Int, Int)
 
   def main(args: Array[String]): Unit = {
 
@@ -84,8 +88,8 @@ object FizzleFade {
       .iterate(1)(i => if ((i & 1) == 0) i >>> 1 else (i >>> 1) ^ 0x00012000)
       .drop(1)
       .takeWhile(_ != 1)
-      .map(i => new Point((i & 0x1FF00) >>> 8, i & 0xFF))
-      .filter(p => p.x < width && p.y < height)
+      .map(i => ((i & 0x1FF00) >>> 8, i & 0xFF))
+      .filter { case (x, y) => x < width && y < height }
   }
 
   /*
@@ -103,8 +107,8 @@ object FizzleFade {
         }.last
         ((rn << 8) | ln) & 0xFFFF
       })
-      .map(i => new Point(i % width, i / width))
-      .filter(p => p.x < width && p.y < height)
+      .map(i => (i % width, i / width))
+      .filter { case (x, y) => x < width && y < height }
   }
 
   /*
@@ -123,6 +127,6 @@ object FizzleFade {
           height * r + (l + F) % height
         }.last
       })
-      .map(i => new Point(i % width, i / width))
+      .map(i => (i % width, i / width))
   }
 }
