@@ -4,7 +4,7 @@ import java.lang.Thread.sleep
 import java.util
 import javax.swing.SwingUtilities.invokeAndWait
 import javax.swing.WindowConstants.DISPOSE_ON_CLOSE
-import javax.swing.{JFrame, SwingWorker}
+import javax.swing.{JFrame, JPanel, SwingWorker}
 
 import FizzleFade.Point
 
@@ -29,7 +29,11 @@ final class FizzleFade(title: String, width: Int, height: Int, points: (Int, Int
       frame.setResizable(false)
       frame.setVisible(true)
 
-      val graphics = frame.getGraphics
+      val panel = new JPanel()
+      panel.setSize(width, height)
+      frame.add(panel)
+
+      val graphics = panel.getGraphics
       graphics.setColor(RED)
 
       this.frame = Some(frame)
@@ -86,9 +90,10 @@ object FizzleFade {
   def randomPointsByLinearFeedbackShiftRegister(width: Int, height: Int): Stream[Point] = {
     Stream
       .iterate(1)(i => if ((i & 1) == 0) i >>> 1 else (i >>> 1) ^ 0x00012000)
-      .drop(1)
-      .takeWhile(_ != 1)
-      .map(i => ((i & 0x1FF00) >>> 8, i & 0xFF))
+      .zipWithIndex
+      .takeWhile { case (value, index) => value != 1 || index == 0 }
+      .map(_._1)
+      .map(i => ((i & 0x1FF00) >>> 8, (i & 0xFF) - 1))
       .filter { case (x, y) => x < width && y < height }
   }
 
