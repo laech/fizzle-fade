@@ -89,7 +89,7 @@ object FizzleFade {
    */
   def randomPointsByLinearFeedbackShiftRegister(width: Int, height: Int): Stream[Point] = {
     Stream
-      .iterate(1)(i => if ((i & 1) == 0) i >>> 1 else (i >>> 1) ^ 0x00012000)
+      .iterate(1)(i => (i >>> 1) ^ (-(i & 1) & 0x00012000))
       .zipWithIndex
       .takeWhile { case (value, index) => value != 1 || index == 0 }
       .map(_._1)
