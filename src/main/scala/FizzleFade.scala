@@ -87,7 +87,7 @@ object FizzleFade {
    *
    * Designed for 320x200
    */
-  def randomPointsByLinearFeedbackShiftRegister(width: Int, height: Int): Stream[Point] = {
+  private def randomPointsByLinearFeedbackShiftRegister(width: Int, height: Int): Stream[Point] = {
     Stream
       .iterate(1)(i => (i >>> 1) ^ (-(i & 1) & 0x00012000))
       .zipWithIndex
@@ -103,7 +103,7 @@ object FizzleFade {
    *
    * Designed for 320x200
    */
-  def randomPointsByFeistelNetwork(width: Int, height: Int): Stream[Point] = {
+  private def randomPointsByFeistelNetwork(width: Int, height: Int): Stream[Point] = {
     Stream
       .range(0, 65536)
       .map(i => {
@@ -121,7 +121,7 @@ object FizzleFade {
    *
    * Designed for any resolution
    */
-  def randomPointsByGeneralizedFeistelNetwork(width: Int, height: Int): Stream[Point] = {
+  private def randomPointsByGeneralizedFeistelNetwork(width: Int, height: Int): Stream[Point] = {
     Stream
       .range(0, width * height)
       .map(i => {
