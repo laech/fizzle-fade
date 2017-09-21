@@ -1,5 +1,6 @@
 import java.awt.Color.RED
 import java.awt.Graphics
+import java.lang.Math.max
 import java.lang.Thread.sleep
 import java.util
 import javax.swing.SwingUtilities.invokeAndWait
@@ -45,7 +46,7 @@ final class FizzleFade(title: String, width: Int, height: Int, points: (Int, Int
     points(width, height).grouped(50).foreach(group => {
       sleep(1)
       group.foreach { case point@(x, y) =>
-        assert(x < width && y < height, point)
+        assert(x >= 0 && x < width && y >= 0 && y < height, point)
         publish(point)
       }
     })
@@ -93,7 +94,7 @@ object FizzleFade {
       .zipWithIndex
       .takeWhile { case (value, index) => value != 1 || index == 0 }
       .map(_._1)
-      .map(i => ((i & 0x1FF00) >>> 8, (i & 0xFF) - 1))
+      .map(i => ((i & 0x1FF00) >>> 8, max((i & 0xFF) - 1, 0)))
       .filter { case (x, y) => x < width && y < height }
   }
 
