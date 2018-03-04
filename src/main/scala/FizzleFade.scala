@@ -54,7 +54,7 @@ final class FizzleFade(title: String, width: Int, height: Int, points: (Int, Int
 
   override def process(points: util.List[Point]): Unit = {
     super.process(points)
-    points.forEach { case (x, y) => graphics.get.drawRect(x, y, 1, 1) }
+    points.forEach { case (x, y) => graphics.get.drawRect(x, y, 0, 0) }
   }
 
   override def done(): Unit = {
